@@ -36,24 +36,26 @@ def read_B(filename):
 
 def gauss_seidel(A, b, epsilon=1e-8, max_iter=10000):
     n = len(b)
-    x = np.zeros(n)  # aprox
-    xp = np.zeros(n)  # aprox de la iteratia anterioara
+    x = np.zeros(n)
     k = 0
     while True:
-        xp[:] = x
+        delta_x_max = 0
         for i in range(n):
             sum_ax = A[i].dot(x) - A[i, i] * x[i]
+            delta_x = abs((b[i] - sum_ax) / A[i, i] - x[i])
             x[i] = (b[i] - sum_ax) / A[i, i]
-        delta_x = np.linalg.norm(x - xp)
+            if delta_x > delta_x_max:
+                delta_x_max = delta_x
         k += 1
-        if delta_x < epsilon or k >= max_iter or delta_x >1e8:
+        if delta_x_max < epsilon or k >= max_iter or delta_x_max > 1e8:
             break
-    if delta_x < epsilon:
-        return x, k
+    sol_aprox = A.dot(x)
+    norma = np.linalg.norm(sol_aprox - b)
+
+    if delta_x_max < epsilon:
+        return x, k, norma
     else:
         print("Divergenta")
-        return None, None
-
 
 def read_data(i):
     A_lil = read_A_lil(f'resources/matrix_A/a_{i}.txt')
@@ -69,7 +71,8 @@ if __name__ == '__main__':
         diag_csr = np.all(A_csr.diagonal() != 0)
         print(f"elementele de pe diagonala matricei {i} pentru lil sunt nenule:", diag_lil)
         print(f"elementele de pe diagonala matricei {i} pentru csr sunt nenule:", diag_csr)
-        x, iterations = gauss_seidel(A_lil, b)
+        x, iterations, norm_diff = gauss_seidel(A_lil, b)
         if x is not None:
-            print(f"Solutia pentru sistemul {i} este: {x}")
-            print(f"Nr de iteratii: {iterations}\n")
+            print(f"solutia pentru sistemul {i} este: {x}")
+            print(f"nr de iteratii: {iterations}")
+            print(f"norma: {norm_diff}\n")
